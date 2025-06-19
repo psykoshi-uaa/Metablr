@@ -433,6 +433,7 @@ if __name__ == "__main__":
 	metab_stitched.stitch_with(Metabolomics("norm_data_neg.xlsx"))
 	
 	metab_stitched.print_fancy()
-	create_reformatted_xlsx_file(metab_pos, "metab_pos_reformatted")
-	create_reformatted_xlsx_file(metab_neg, "metab_neg_reformatted")
-	create_stitched_xlsx_file(metab_pos, metab_neg, metab_stitched, "metab_stitched_table")
+	#create_reformatted_xlsx_file(metab_pos, "metab_pos_reformatted")
+	#create_reformatted_xlsx_file(metab_neg, "metab_neg_reformatted")
+	create_reformatted_xlsx_file(metab_stitched, "metab_stitched_reformatted")
+	#create_stitched_xlsx_file(metab_pos, metab_neg, metab_stitched, "metab_stitched_table")
