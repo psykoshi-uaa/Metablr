@@ -314,7 +314,7 @@ def create_reformatted_xlsx_file(metabolomics, save_as):
 	wb = Workbook()
 	ws = wb.active
 	ws.title = save_as
-	header_names = ["Group", "Name"]
+	header_names = ["Name", "Group"]
 
 	for name in metabolomics.get_names():
 		header_names.append(name)
