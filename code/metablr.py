@@ -20,6 +20,10 @@ class Program_Log():
 		self.reg_log = []
 		self.error_log = []
 		self.error_log.append("\n\033[31;1m\t----ERROR----\033[0m\n")
+	
+	
+	def get_error_count(self):
+		return len(self.error_log) - 1
 
 	def append_reg(self, reg):
 		self.reg_log.append(reg)
@@ -382,9 +386,9 @@ def create_reformatted_xlsx_file(metabolomics, save_as, program_log):
 	
 
 def create_stitched_xlsx_file(metab1, metab2, stitched, save_as):
-	def_cell_color = PatternFill(start_color="e26b0a", end_color="e26b0a", fill_type = "solid")	
-	metab1_cell_color = PatternFill(start_color="538dd5", end_color="538dd5", fill_type = "solid")	
-	metab2_cell_color = PatternFill(start_color="92d050", end_color="92d050", fill_type = "solid")	
+	def_cell_color = PatternFill(start_color="868686", end_color="868686", fill_type = "solid")	
+	metab1_cell_color = PatternFill(start_color="e97700", end_color="e97700", fill_type = "solid")	
+	metab2_cell_color = PatternFill(start_color="9358E3", end_color="9358E3", fill_type = "solid")	
 	bold_font = Font(bold=True)
 	data = []
 	header = [metab1.get_filename(), metab2.get_filename(), "Both", "Combined for MetaboAnalyst"]

@@ -4,6 +4,24 @@ from tkinter import messagebox as msg
 from tkinter.ttk import Notebook
 from tkinter import filedialog
 
+class EventWindow(tk.Tk):
+	def __init__(self, label_text, button_text):
+		super().__init__()
+		self.title("")
+		self.geometry("256x100")
+		
+		self.success_text = tk.Label(self, text=label_text, pady=20)
+		self.ok_button = tk.Button(self, text=button_text, width=10, command=self.button_pressed)
+		
+		self.success_text.pack(side=tk.TOP)
+		self.ok_button.pack(side=tk.TOP)
+		
+		
+	def button_pressed(self):
+		self.destroy()
+
+
+		
 class App(tk.Tk):
 	def __init__(self):
 		super().__init__()
@@ -72,6 +90,9 @@ class App(tk.Tk):
 		program_log = metablr.Program_Log()
 		metablr.program_state((stitch_args), self.save_as(), program_log)
 		program_log.print_log()
+
+		self.event_window(program_log, "Success", "OK", "Error: check both xlsx files", "OK")
+			
 		return
 
 
@@ -80,7 +101,20 @@ class App(tk.Tk):
 		program_log = metablr.Program_Log()
 		metablr.program_state((reformat_args), self.save_as(), program_log)
 		program_log.print_log()
+		
+		self.event_window(program_log, "Success", "OK", "Error: check xlsx file", "OK")
+			
 		return
+		
+		
+	def event_window(self, program_log, event_text_success, event_button_success, event_text_error, event_button_error):
+		event_text = event_text_success
+		event_button = event_button_success
+		if (program_log.get_error_count() > 0):
+			event_text =  event_text_error
+			event_button = event_button_error
+		event = EventWindow(event_text, event_button)	
+		event.mainloop()
 
 
 	def exit_button_pressed(self):
@@ -91,5 +125,3 @@ class App(tk.Tk):
 if __name__ == "__main__":
 	app = App()
 	app.mainloop()
-
-
