@@ -33,26 +33,22 @@ class App(tk.Tk):
 			# configure entry1 frame
 		self.entry1_frame = tk.Frame(self, pady=20)
 
-		self.file1_label = tk.Label(self.entry1_frame, text="File 1:", pady=10, padx=10)
+		self.file1_label = tk.Label(self.entry1_frame, text="Positive Mode CD Table:", pady=10, padx=10)
 		self.file1_label.pack(side=tk.LEFT, anchor="w")
 		self.browse_files1 = tk.Button(self.entry1_frame, text="...", command=lambda:self.browse_files(self.file1_entry))
 		self.browse_files1.pack(side=tk.LEFT)
 		self.file1_entry = tk.Entry(self.entry1_frame, width=55)
 		self.file1_entry.pack(side=tk.LEFT)
-		self.reformat_button = tk.Button(self.entry1_frame, text="Reformat", command=lambda:self.reformat_button_pressed(self.file1_entry.get()))
-		self.reformat_button.pack(side=tk.RIGHT)
 
 			# configure entry2 frame
 		self.entry2_frame = tk.Frame(self, pady=0)
 
-		self.file2_label = tk.Label(self.entry2_frame, text="File 2:", pady=10, padx=10)
+		self.file2_label = tk.Label(self.entry2_frame, text="Negative Mode CD Table:", pady=10, padx=10)
 		self.file2_label.pack(side=tk.LEFT, anchor="w")
 		self.browse_files2 = tk.Button(self.entry2_frame, text="...", command=lambda:self.browse_files(self.file2_entry))
 		self.browse_files2.pack(side=tk.LEFT)
 		self.file2_entry = tk.Entry(self.entry2_frame, width=55)
 		self.file2_entry.pack(side=tk.LEFT)
-		self.reformat_button = tk.Button(self.entry2_frame, text="Reformat", command=lambda:self.reformat_button_pressed(self.file2_entry.get()))
-		self.reformat_button.pack(side=tk.RIGHT)
 
 			# configure stitch buttons
 		self.exit_button_frame = tk.Frame(self, width=200, padx=40, pady=20)
@@ -60,14 +56,19 @@ class App(tk.Tk):
 		self.exit_button.pack(side=tk.TOP)
 
 		self.stitch_button_frame = tk.Frame(self, width=200, padx=40, pady=20)
-		self.stitch_button = tk.Button(self.stitch_button_frame, text="Stitch", width=10, padx=30, command=self.stitch_button_pressed)
+		self.stitch_button = tk.Button(self.stitch_button_frame, text="Export Summary", width=10, padx=30, command=self.stitch_button_pressed)
 		self.stitch_button.pack(side=tk.TOP)
+
+		self.reformat_button_frame = tk.Frame(self, width=200, padx=40, pady=20)
+		self.reformat_button = tk.Button(self.reformat_button_frame, text="Export Data Table", width=10, padx=30, command=self.reformat_button_pressed)
+		self.reformat_button.pack(side=tk.TOP)
 
 			# pack stitch frames
 		self.entry1_frame.pack(side=tk.TOP, anchor="w")
 		self.entry2_frame.pack(side=tk.TOP, anchor="w")
 		self.exit_button_frame.pack(side=tk.RIGHT)
 		self.stitch_button_frame.pack(side=tk.LEFT)
+		self.reformat_button_frame.pack(side=tk.LEFT)
 
 
 	def browse_files(self, text):
@@ -96,13 +97,13 @@ class App(tk.Tk):
 		return
 
 
-	def reformat_button_pressed(self, filename):
-		reformat_args = ["-R", filename]
+	def reformat_button_pressed(self):
+		reformat_args = ["-R", self.file1_entry.get(), self.file2_entry.get()]
 		program_log = metablr.Program_Log()
 		metablr.program_state((reformat_args), self.save_as(), program_log)
 		program_log.print_log()
 		
-		self.event_window(program_log, "Success", "OK", "Error: check xlsx file", "OK")
+		self.event_window(program_log, "Success", "OK", "Error: check both xlsx files", "OK")
 			
 		return
 		
