@@ -98,9 +98,9 @@ class App(tk.Tk):
 
 
 	def reformat_button_pressed(self):
-		reformat_args = ["-R", self.file1_entry.get(), self.file2_entry.get()]
+		reformat_args = ["-R", self.file1_entry.get(), self.file2_entry.get(), self.save_as()]
 		program_log = metablr.Program_Log()
-		metablr.program_state((reformat_args), self.save_as(), program_log)
+		metablr.program_state((reformat_args), program_log)
 		program_log.print_log()
 		
 		self.event_window(program_log, "Success", "OK", "Error: check both xlsx files", "OK")

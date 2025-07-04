@@ -8,10 +8,10 @@ from openpyxl.styles import colors, Font, Color, PatternFill, Border, Side, Alig
 
 
 
-HELP_SEG = "\nAppend a positive and then a negative xlsx file respectively followed by the name of the file you are creating\nlist of Metablr commands:\n\t-S | --stitch\tstitches two appended metabolomics files\n\t-R | --reformat\treformats the appended file\n\t-h | --help\thi\n"
+HELP_SEG = "\nAppend a positive and then a negative xlsx file respectively followed by the name of the file you are creating\nlist of Metablr commands:\n\t-S | --summary\tsummarized two appended metabolomics files into a combined summary table\n\t-R | --reformat\treformats the appended files into a combined data table\n\t-h | --help\thi\n"
 ERROR_0 = "Too few xlsx files"
 ERROR_1 = "Too many flags"
-ERROR_1 = "Too many arguments"
+ERROR_2 = "Too many arguments"
 CLI_SAVE_AS = "PL4C3h0Ld3r51l3n4mE"
 WORKBOOK_SHEET_NAME = "Compounds"
 
@@ -546,39 +546,38 @@ def check_filename(xlsx_filename, program_log):
 
 
 
-def program_state(args, save_as, program_log):
+def program_state(args, program_log):
 	stitch_mode = False
 	reformat_mode = False
 	fancy_print = False
+
 	xlsx_files = []
 	flags = []
 	for argv in args:
 		if (argv == "-S") or (argv == "--stitch"):
 			stitch_mode = True
 			flags.append(argv)
-		if (argv == "-R") or (argv == "--reformat"):
+		elif (argv == "-R") or (argv == "--reformat"):
 			reformat_mode = True
 			flags.append(argv)
-		if (argv == "-h") or (argv == "--help"):
+		elif (argv == "-h") or (argv == "--help"):
 			program_log.append_reg(HELP_SEG)
 			flags.append(argv)
 			return
-		if (".xlsx" in argv):
+		elif (".xlsx" in argv and argv != args[-1]):
 			if (check_filename(argv, program_log) == 1):
 				xlsx_files.append(argv)
 
 	if (len(flags) == 0):
 		program_log.append_reg("Please type -h to see a list of commands")
-
+		return
 	if (len(flags) != 1):
 		program_log.append_error(ERROR_1)
 		return
-
-	if (len(xlsx_files) < 3):
+	if (len(xlsx_files) < 2):
 		program_log.append_error(ERROR_0)
 		return
-
-	if (len(xlsx_files) > 3):
+	elif (len(xlsx_files) > 2):
 		program_log.append_error(ERROR_2)
 		return
 
@@ -588,16 +587,12 @@ def program_state(args, save_as, program_log):
 		metab_stitched = Metabolomics(xlsx_files[0], program_log)
 		metab_stitched.stitch_with(Metabolomics(xlsx_files[1], program_log))
 
-		if (save_as == CLI_SAVE_AS):
-			new_filename = xlsx_files[2]
-		else:
-			new_filename = save_as
-		create_stitched_xlsx_file(metab1, metab2, metab_stitched, new_filename)
+		create_stitched_xlsx_file(metab1, metab2, metab_stitched, args[-1])
 
-		if (os.path.isfile(new_filename)):
-			program_log.append_reg(xlsx_files[0] + " + " + xlsx_files[1]  + "\033[32;1m ---> \033[33;1m\"" + new_filename + "\"\033[0m...")
+		if (os.path.isfile(args[-1])):
+			program_log.append_reg(xlsx_files[0] + " + " + xlsx_files[1]  + "\033[32;1m ---> \033[33;1m\"" + args[-1] + "\"\033[0m...")
 		else:
-			program_log.append_reg(xlsx_files[0] + " + " + xlsx_files[1]  + "\033[31;1m ---X \033[33;1m\"" + new_filename + "\"\033[0m...")
+			program_log.append_reg(xlsx_files[0] + " + " + xlsx_files[1]  + "\033[31;1m ---X \033[33;1m\"" + args[-1] + "\"\033[0m...")
 		
 	if (reformat_mode == True):
 		metab1 = Metabolomics(xlsx_files[0], program_log)
@@ -605,20 +600,18 @@ def program_state(args, save_as, program_log):
 		metab_stitched = Metabolomics(xlsx_files[0], program_log)
 		metab_stitched.stitch_with(Metabolomics(xlsx_files[1], program_log))
 
-		if (save_as == CLI_SAVE_AS):
-			new_filename = xlsx_files[2]
-		else:
-			new_filename = save_as
-		create_reformatted_xlsx_file(metab1, metab2, metab_stitched, new_filename, program_log)
+		create_reformatted_xlsx_file(metab1, metab2, metab_stitched, args[-1], program_log)
 	
-		if (os.path.isfile(new_filename)):
-			program_log.append_reg("Pos + Neg data" + "\033[32;1m ---> \033[33;1m\"" + new_filename + "\"\033[0m...")
+		if (os.path.isfile(args[-1])):
+			program_log.append_reg("Pos + Neg data" + "\033[32;1m ---> \033[33;1m\"" + args[-1] + "\"\033[0m...")
 		else:
-			program_log.append_error("Pos + Neg data" + "\033[31;1m ---X \033[33;1m\"" + new_filename + "\"\033[0m...")
+			program_log.append_error("Pos + Neg data" + "\033[31;1m ---X \033[33;1m\"" + args[-1] + "\"\033[0m...")
 
 
 
 if __name__ == "__main__":
 	program_log = Program_Log()
-	program_state(sys.argv, CLI_SAVE_AS, program_log)
+
+	program_state(sys.argv, program_log)
+
 	program_log.print_log()
