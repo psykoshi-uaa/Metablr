@@ -27,45 +27,116 @@ class App(tk.Tk):
 		super().__init__()
 
 		self.title("Metablr")
-		self.geometry("550x200")
+		#self.geometry("650x380")
 		self.resizable(0, 0)
 
-			# configure entry1 frame
-		self.entry1_frame = tk.Frame(self, pady=20)
+		#configure menu
+		#self.menu_bar = tk.Menu(self)
+		#self.config(menu=self.menu_bar)
+		#self.file_menu = tk.Menu(self.menu_bar, tearoff=0)
+		#self.export_menu = tk.Menu(self.menu_bar, tearoff=0)
+		#self.menu_bar.add_cascade(label="File", menu=self.file_menu)
+		#self.file_menu.add_command(label="Update", command=self.update_program)
+		#self.file_menu.add_cascade(label="Export", menu=self.export_menu)
+		#self.export_menu.add_command(label="Export as Summary Table", command=self.stitch_button_pressed)
+		#self.export_menu.add_command(label="Export as Data Table", command=self.reformat_button_pressed)
+		#self.file_menu.add_command(label="Exit", command=self.exit_button_pressed)
 
-		self.file1_label = tk.Label(self.entry1_frame, text="Positive Mode CD Table:", pady=10, padx=10)
-		self.file1_label.pack(side=tk.LEFT, anchor="w")
-		self.browse_files1 = tk.Button(self.entry1_frame, text="...", command=lambda:self.browse_files(self.file1_entry))
-		self.browse_files1.pack(side=tk.LEFT)
-		self.file1_entry = tk.Entry(self.entry1_frame, width=55)
-		self.file1_entry.pack(side=tk.LEFT)
+
+		#configure body
+		self.filler_frameT = tk.Frame(self, width=25, height=25)
+		self.filler_frameT.pack(side=tk.TOP)
+		self.filler_frameL = tk.Frame(self, width=25)
+		self.filler_frameL.pack(side=tk.LEFT)
+		self.filler_frameR = tk.Frame(self, width=25)
+		self.filler_frameR.pack(side=tk.RIGHT)
+
+			# configure entry1 frame
+		self.entry1_frame = tk.Frame(self, pady=20, relief="sunken", borderwidth=2)
+
+		self.file1_label = tk.Label(self.entry1_frame, text="Positive Mode")
+		self.file1_label.pack(side=tk.TOP)
+
+		self.entry1_marginL = tk.Frame(self.entry1_frame, width=25)
+		self.entry1_marginL.pack(side=tk.LEFT)
+		self.entry1_marginR = tk.Frame(self.entry1_frame, width=25)
+		self.entry1_marginR.pack(side=tk.RIGHT)
+
+		self.CD_frame1 = tk.Frame(self.entry1_frame)
+		self.file1_CD_label = tk.Label(self.CD_frame1, text="CD Table:")
+		self.file1_CD_label.pack(side=tk.TOP, anchor='w')
+		self.CD_browse_files1 = tk.Button(self.CD_frame1, text="...", padx=10, command=lambda:self.browse_files(self.file1_CD_entry))
+		self.CD_browse_files1.pack(side=tk.LEFT)
+		self.file1_CD_entry = tk.Entry(self.CD_frame1, width=80)
+		self.file1_CD_entry.pack(side=tk.LEFT)
+		self.CD_frame1.pack(side=tk.TOP)
+
+		self.filler_entry1 = tk.Label(self.entry1_frame, pady=5)
+		self.filler_entry1.pack(side=tk.TOP)
+
+		self.Inp_frame1 = tk.Frame(self.entry1_frame)
+		self.file1_Inp_label = tk.Label(self.Inp_frame1, text="Input File:")
+		self.file1_Inp_label.pack(side=tk.TOP, anchor='w')
+		self.Inp_browse_files1 = tk.Button(self.Inp_frame1, text="...", padx=10, command=lambda:self.browse_files(self.file1_Inp_entry))
+		self.Inp_browse_files1.pack(side=tk.LEFT)
+		self.file1_Inp_entry = tk.Entry(self.Inp_frame1, width=80)
+		self.file1_Inp_entry.pack(side=tk.LEFT)
+		self.Inp_frame1.pack(side=tk.TOP)
+
+		self.filler_entrys = tk.Label(self, pady=5)
 
 			# configure entry2 frame
-		self.entry2_frame = tk.Frame(self, pady=0)
+		self.entry2_frame = tk.Frame(self, pady=20, relief="sunken", borderwidth=2)
 
-		self.file2_label = tk.Label(self.entry2_frame, text="Negative Mode CD Table:", pady=10, padx=10)
-		self.file2_label.pack(side=tk.LEFT, anchor="w")
-		self.browse_files2 = tk.Button(self.entry2_frame, text="...", command=lambda:self.browse_files(self.file2_entry))
-		self.browse_files2.pack(side=tk.LEFT)
-		self.file2_entry = tk.Entry(self.entry2_frame, width=55)
-		self.file2_entry.pack(side=tk.LEFT)
+		self.file2_label = tk.Label(self.entry2_frame, text="Negative Mode")
+		self.file2_label.pack(side=tk.TOP)
+
+		self.entry2_marginL = tk.Frame(self.entry2_frame, width=25)
+		self.entry2_marginL.pack(side=tk.LEFT)
+		self.entry2_marginR = tk.Frame(self.entry2_frame, width=25)
+		self.entry2_marginR.pack(side=tk.RIGHT)
+
+		self.CD_frame2 = tk.Frame(self.entry2_frame)
+		self.file2_CD_label = tk.Label(self.CD_frame2, text="CD Table:")
+		self.file2_CD_label.pack(side=tk.TOP, anchor='w')
+		self.CD_browse_files2 = tk.Button(self.CD_frame2, text="...", padx=10, command=lambda:self.browse_files(self.file2_CD_entry))
+		self.CD_browse_files2.pack(side=tk.LEFT)
+		self.file2_CD_entry = tk.Entry(self.CD_frame2, width=80)
+		self.file2_CD_entry.pack(side=tk.LEFT)
+		self.CD_frame2.pack(side=tk.TOP)
+
+		self.filler_entry2 = tk.Label(self.entry2_frame, pady=5)
+		self.filler_entry2.pack(side=tk.TOP)
+
+		self.Inp_frame2 = tk.Frame(self.entry2_frame)
+		self.file2_Inp_label = tk.Label(self.Inp_frame2, text="Input File:")
+		self.file2_Inp_label.pack(side=tk.TOP, anchor='w')
+		self.Inp_browse_files2 = tk.Button(self.Inp_frame2, text="...", padx=10, command=lambda:self.browse_files(self.file2_Inp_entry))
+		self.Inp_browse_files2.pack(side=tk.LEFT)
+		self.file2_Inp_entry = tk.Entry(self.Inp_frame2, width=80)
+		self.file2_Inp_entry.pack(side=tk.LEFT)
+		self.Inp_frame2.pack(side=tk.TOP)
 
 			# configure stitch buttons
-		self.exit_button_frame = tk.Frame(self, width=200, padx=40, pady=20)
+		self.exit_button_frame = tk.Frame(self, width=200, pady=20)
 		self.exit_button = tk.Button(self.exit_button_frame, text="Exit", width=10, padx=30, command=self.exit_button_pressed)
 		self.exit_button.pack(side=tk.TOP)
 
-		self.stitch_button_frame = tk.Frame(self, width=200, padx=40, pady=20)
+		self.stitch_button_frame = tk.Frame(self, width=200, padx=5, pady=20)
 		self.stitch_button = tk.Button(self.stitch_button_frame, text="Export Summary", width=10, padx=30, command=self.stitch_button_pressed)
 		self.stitch_button.pack(side=tk.TOP)
 
-		self.reformat_button_frame = tk.Frame(self, width=200, padx=40, pady=20)
+		self.reformat_button_frame = tk.Frame(self, width=200, padx=5, pady=20)
 		self.reformat_button = tk.Button(self.reformat_button_frame, text="Export Data Table", width=10, padx=30, command=self.reformat_button_pressed)
 		self.reformat_button.pack(side=tk.TOP)
 
+		self.filler_entrys2 = tk.Label(self, pady=5)
+
 			# pack stitch frames
 		self.entry1_frame.pack(side=tk.TOP, anchor="w")
+		self.filler_entrys.pack(side=tk.TOP)
 		self.entry2_frame.pack(side=tk.TOP, anchor="w")
+		self.filler_entrys2.pack(side=tk.TOP)
 		self.exit_button_frame.pack(side=tk.RIGHT)
 		self.stitch_button_frame.pack(side=tk.LEFT)
 		self.reformat_button_frame.pack(side=tk.LEFT)
@@ -87,9 +158,9 @@ class App(tk.Tk):
 
 	 
 	def stitch_button_pressed(self):
-		stitch_args = ["-S", self.file1_entry.get(), self.file2_entry.get()]
+		stitch_args = ["-S", self.file1_CD_entry.get(), self.file2_CD_entry.get(), self.save_as()]
 		program_log = metablr.Program_Log()
-		metablr.program_state((stitch_args), self.save_as(), program_log)
+		metablr.program_state((stitch_args), program_log)
 		program_log.print_log()
 
 		self.event_window(program_log, "Success", "OK", "Error: check both xlsx files", "OK")
@@ -98,12 +169,12 @@ class App(tk.Tk):
 
 
 	def reformat_button_pressed(self):
-		reformat_args = ["-R", self.file1_entry.get(), self.file2_entry.get(), self.save_as()]
+		reformat_args = ["-R", self.file1_CD_entry.get(), self.file1_Inp_entry.get(), self.file2_CD_entry.get(), self.file2_Inp_entry.get(), self.save_as()]
 		program_log = metablr.Program_Log()
 		metablr.program_state((reformat_args), program_log)
 		program_log.print_log()
 		
-		self.event_window(program_log, "Success", "OK", "Error: check both xlsx files", "OK")
+		self.event_window(program_log, "Success", "OK", "Error: ensure CD tables and Input files are xlsx files", "OK")
 			
 		return
 		
@@ -116,6 +187,10 @@ class App(tk.Tk):
 			event_button = event_button_error
 		event = EventWindow(event_text, event_button)	
 		event.mainloop()
+
+	
+	def update_program(self):
+		print("update")
 
 
 	def exit_button_pressed(self):

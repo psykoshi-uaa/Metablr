@@ -7,14 +7,12 @@ from openpyxl.worksheet.dimensions import ColumnDimension, DimensionHolder
 from openpyxl.styles import colors, Font, Color, PatternFill, Border, Side, Alignment
 
 
-
 HELP_SEG = "\nAppend a positive and then a negative xlsx file respectively followed by the name of the file you are creating\nlist of Metablr commands:\n\t-S | --summary\tsummarized two appended metabolomics files into a combined summary table\n\t-R | --reformat\treformats the appended files into a combined data table\n\t-h | --help\thi\n"
 ERROR_0 = "Too few xlsx files"
 ERROR_1 = "Too many flags"
 ERROR_2 = "Too many arguments"
 CLI_SAVE_AS = "PL4C3h0Ld3r51l3n4mE"
 WORKBOOK_SHEET_NAME = "Compounds"
-
 
 
 class Program_Log():
@@ -206,12 +204,12 @@ class Metabolomics():
 		self.filename = xlsx_filename
 		self.headers = Headers(xlsx_filename, program_log)
 		self.metabolites = []
+		self.repl_group_names = []
 		self.repl_sample_names = []
 		self.row_size = 0
 		self.col_size = 0
 		self.num_metabolites = 0
 		self.autoset(xlsx_filename)
-		self.autoset_repl_sample_names(xlsx_filename)
 
 
 	def get_filename(self):
@@ -255,6 +253,13 @@ class Metabolomics():
 			program_log.append_error(e)
 			return ""
 			
+	def get_group_name(self, ind, program_log):
+		try:
+			return self.repl_group_names[ind]
+		except Exception as e:
+			program_log.append_error(e)
+			return ""
+			
 	def get_num_metabolites(self):
 		return self.num_metabolites
 
@@ -276,36 +281,21 @@ class Metabolomics():
 			self.metabolites.append(Metabolite(metabolite_data, self.headers.get_ind_name(), self.headers.get_ind_rsd(), self.headers.get_ind_normarea_start(), self.headers.get_ind_normarea_end()))
 
 
-	def autoset_repl_sample_names(self, xlsx_filename):
-		wb = openpyxl.load_workbook(xlsx_filename)
-		ws = wb[WORKBOOK_SHEET_NAME]
-		self.num_metabolites = ws.max_row - 1
-		sample_name = ""
+	def autoset_repl_names(self, cat_vars):
+		sample_name = "PLACEHOLDER"
 		temp_name = ""
-		
-		count = 0
 		sample_num = 1
-		for col in range(self.headers.get_ind_repl_start(), self.headers.get_ind_repl_end() + 1):
-			cell = ws.cell(row = 1, column = col)
-			for char in cell.value:
-				if (count < 3):
-					sample_name += char
-					if (ord(char) < 65 or ord(char) > 90):
-						count = 0
-						sample_name = ""
-						continue
-					count += 1
-
-			if (temp_name == sample_name):
+		for var in cat_vars:
+			sample_name = var
+			if (temp_name == var):
 				sample_num += 1
 			else:
 				sample_num = 1
-				temp_name = sample_name
+				temp_name = var
 
 			sample_name += (" " + (str(sample_num).zfill(3)))
+			self.repl_group_names.append(var)
 			self.repl_sample_names.append(sample_name)
-			count = 0
-			sample_name = ""
 						
 
 	def stitch_with(self, other):
@@ -315,7 +305,7 @@ class Metabolomics():
 			for self_metab in self.get_metabolites().copy():
 				if (other_metab == self_metab):
 					is_unique = False
-					if (other_metab.get_rsd() > self_metab.get_rsd()):
+					if (other_metab.get_rsd() < self_metab.get_rsd()):
 						self.get_metabolites()[counter] = other_metab
 						break
 					elif (other_metab.get_rsd() == self_metab.get_rsd()):
@@ -360,10 +350,39 @@ class Metabolomics():
 
 
 
+def get_input_file_cat_vars(input_filename):
+	wb = openpyxl.load_workbook(input_filename)
+	ws = wb[wb.sheetnames[0]]
+	samp_ind = 0
+	cat_var_ind = 0
+	cat_var_list = []
+	for col in range(ws.min_column, ws.max_column):
+		cell = ws.cell(row=1, column=col)
+		if ("sample type" in cell.value.lower()):
+			samp_ind = col
+		elif ("categorical" in cell.value.lower() and "variable" in cell.value.lower()):
+			cat_var_ind = col
+
+	for row in range(ws.min_row + 1, ws.max_row + 1):
+		is_sample = False
+		for col in range(samp_ind, cat_var_ind + 1):
+			cell = ws.cell(row=row, column=col)
+			if (col == samp_ind and "sample" in cell.value.lower()):
+				is_sample = True
+					
+			if (col == cat_var_ind and is_sample == True):
+				cat_var_list.append(cell.value)
+
+	return cat_var_list
+
+
 def create_reformatted_xlsx_file(metab1, metab2, stitched, save_as, program_log):
+		#gray
 	def_cell_color = PatternFill(start_color="868686", end_color="868686", fill_type = "solid")	
+		#orange
 	metab1_cell_color = PatternFill(start_color="e97700", end_color="e97700", fill_type = "solid")	
-	metab2_cell_color = PatternFill(start_color="9358E3", end_color="9358E3", fill_type = "solid")	
+		#purple
+	metab2_cell_color = PatternFill(start_color="b971f0", end_color="b971f0", fill_type = "solid")	
 	outline = Side(style = "thin", color = "000000")
 	wb = Workbook()
 	ws = wb.active
@@ -405,7 +424,7 @@ def create_reformatted_xlsx_file(metab1, metab2, stitched, save_as, program_log)
 	for row in range(repl_ind_start - 1, repl_ind_end - 1):
 		data = []
 		data.append(stitched.get_sample_name(counter, program_log))
-		data.append("PLACEHOLDER")
+		data.append(stitched.get_group_name(counter, program_log))
 		for repl_data in stitched.get_data_at_ind(row):
 			data.append(repl_data)
 		ws.append(data)
@@ -421,12 +440,18 @@ def create_reformatted_xlsx_file(metab1, metab2, stitched, save_as, program_log)
 
 
 def create_stitched_xlsx_file(metab1, metab2, stitched, save_as):
+		#gray
 	def_cell_color = PatternFill(start_color="868686", end_color="868686", fill_type = "solid")	
+		#orange
 	metab1_cell_color = PatternFill(start_color="e97700", end_color="e97700", fill_type = "solid")	
-	metab2_cell_color = PatternFill(start_color="9358E3", end_color="9358E3", fill_type = "solid")	
+	metab1_cell_color_light = PatternFill(start_color="fcd5b4", end_color="fcd5b4", fill_type = "solid")	
+		#purple
+	metab2_cell_color = PatternFill(start_color="b971f0", end_color="b971f0", fill_type = "solid")	
+	metab2_cell_color_light = PatternFill(start_color="ccc0da", end_color="ccc0da", fill_type = "solid")	
+
 	bold_font = Font(bold=True)
 	data = []
-	header = ["Combined for MetaboAnalyst", "Both", "Positive RSD QC", "Positive QC Norm Avg.", " ", "Negative RSD QC", "Negative QC Norm Avg."]
+	header = ["Combined for MetaboAnalyst", "Both", "Positive RSD QC", "Positive QC Norm Avg.", "Negative RSD QC", "Negative QC Norm Avg."]
 	metab1_counter = 0
 	metab2_counter = 0
 
@@ -436,7 +461,7 @@ def create_stitched_xlsx_file(metab1, metab2, stitched, save_as):
 		cell_color = def_cell_color
 		is_metab1 = False
 		is_metab2 = False
-		line = ['','','','','','','']
+		line = ['','','','','','']
 
 		metab1_name = metab1.get_metabolites()[metab1_counter].get_name()
 		metab2_name = metab2.get_metabolites()[metab2_counter].get_name()
@@ -457,8 +482,8 @@ def create_stitched_xlsx_file(metab1, metab2, stitched, save_as):
 		if metab2_name == metabolite.get_name():
 			if metab2_normarea == metabolite.get_avg_normarea() and not metab1_normarea == metabolite.get_avg_normarea():
 				cell_color = metab2_cell_color
-			line[5] = metab2_rsd
-			line[6] = metab2_normarea
+			line[4] = metab2_rsd
+			line[5] = metab2_normarea
 			is_metab2 = True
 			metab2_counter += 1
 
@@ -494,13 +519,25 @@ def create_stitched_xlsx_file(metab1, metab2, stitched, save_as):
 			cell.alignment = Alignment(horizontal = "center", vertical = "bottom")
 		counter += 1
 
+	for row in ws.iter_rows(min_row=2, min_col = 3, max_col=4, max_row=ws.max_row):
+		for cell in row:
+			cell.fill = metab1_cell_color_light
+			cell.border = Border(top=outline, left=outline, right=outline, bottom=outline)
+		counter += 1
+
+	for row in ws.iter_rows(min_row=2, min_col = 5, max_col=6, max_row=ws.max_row):
+		for cell in row:
+			cell.fill = metab2_cell_color_light
+			cell.border = Border(top=outline, left=outline, right=outline, bottom=outline)
+		counter += 1
+
 	dim_holder = DimensionHolder(worksheet=ws)
 	for col in range(ws.min_column, ws.max_column + 1):
 		dim_holder[get_column_letter(col)] = ColumnDimension(ws, min=col, max=col, width=10)
 	dim_holder['A'] = ColumnDimension(ws, min=1, max=1, width=40)
 	dim_holder['D'] = ColumnDimension(ws, min=4, max=4, width=15)
-	dim_holder['G'] = ColumnDimension(ws, min=7, max=7, width=15)
-	dim_holder['I'] = ColumnDimension(ws, min=9, max=9, width=25)
+	dim_holder['F'] = ColumnDimension(ws, min=6, max=6, width=15)
+	dim_holder['H'] = ColumnDimension(ws, min=8, max=8, width=25)
 	ws.column_dimensions = dim_holder
 
 	cell = ws["C1"]
@@ -512,21 +549,21 @@ def create_stitched_xlsx_file(metab1, metab2, stitched, save_as):
 	cell.border = Border(top=outline, left=outline, right=outline, bottom=outline)
 	cell.alignment = Alignment(horizontal = "right", vertical = "bottom")
 
+	cell = ws["E1"]
+	cell.fill = metab2_cell_color
+	cell.border = Border(top=outline, left=outline, right=outline, bottom=outline)
+	cell.alignment = Alignment(horizontal = "right", vertical = "bottom")
 	cell = ws["F1"]
 	cell.fill = metab2_cell_color
 	cell.border = Border(top=outline, left=outline, right=outline, bottom=outline)
 	cell.alignment = Alignment(horizontal = "right", vertical = "bottom")
-	cell = ws["G1"]
-	cell.fill = metab2_cell_color
-	cell.border = Border(top=outline, left=outline, right=outline, bottom=outline)
-	cell.alignment = Alignment(horizontal = "right", vertical = "bottom")
 
-	cell = ws["I2"]
+	cell = ws["H2"]
 	cell.value = "Positive Mode"
 	cell.fill = metab1_cell_color
 	cell.border = Border(top=outline, left=outline, right=outline, bottom=outline)
 	cell.alignment = Alignment(horizontal = "center", vertical = "bottom")
-	cell = ws["I3"]
+	cell = ws["H3"]
 	cell.value = "Negative Mode"
 	cell.fill = metab2_cell_color
 	cell.border = Border(top=outline, left=outline, right=outline, bottom=outline)
@@ -549,7 +586,6 @@ def check_filename(xlsx_filename, program_log):
 def program_state(args, program_log):
 	stitch_mode = False
 	reformat_mode = False
-	fancy_print = False
 
 	xlsx_files = []
 	flags = []
@@ -565,8 +601,8 @@ def program_state(args, program_log):
 			flags.append(argv)
 			return
 		elif (".xlsx" in argv and argv != args[-1]):
-			if (check_filename(argv, program_log) == 1):
-				xlsx_files.append(argv)
+			# if (check_filename(argv, program_log) == 1):
+			xlsx_files.append(argv)
 
 	if (len(flags) == 0):
 		program_log.append_reg("Please type -h to see a list of commands")
@@ -574,14 +610,14 @@ def program_state(args, program_log):
 	if (len(flags) != 1):
 		program_log.append_error(ERROR_1)
 		return
-	if (len(xlsx_files) < 2):
-		program_log.append_error(ERROR_0)
-		return
-	elif (len(xlsx_files) > 2):
-		program_log.append_error(ERROR_2)
-		return
 
 	if (stitch_mode == True):
+		if (len(xlsx_files) < 2):
+			program_log.append_error(ERROR_0)
+			return
+		elif (len(xlsx_files) > 4):
+			program_log.append_error(ERROR_2)
+			return
 		metab1 = Metabolomics(xlsx_files[0], program_log)
 		metab2 = Metabolomics(xlsx_files[1], program_log)
 		metab_stitched = Metabolomics(xlsx_files[0], program_log)
@@ -595,10 +631,25 @@ def program_state(args, program_log):
 			program_log.append_reg(xlsx_files[0] + " + " + xlsx_files[1]  + "\033[31;1m ---X \033[33;1m\"" + args[-1] + "\"\033[0m...")
 		
 	if (reformat_mode == True):
+		if (len(xlsx_files) < 4):
+			program_log.append_error(ERROR_0)
+			program_log.append_error("Ensure you are using 4 xlsx files for data table export")
+			return
+		elif (len(xlsx_files) > 4):
+			program_log.append_error(ERROR_2)
+			program_log.append_error("Ensure you are using 4 xlsx files for data table export")
+			return
+		inp_file1 = get_input_file_cat_vars(xlsx_files[1])
 		metab1 = Metabolomics(xlsx_files[0], program_log)
-		metab2 = Metabolomics(xlsx_files[1], program_log)
+		metab1.autoset_repl_names(inp_file1)
+
+		inp_file2 = get_input_file_cat_vars(xlsx_files[3])
+		metab2 = Metabolomics(xlsx_files[2], program_log)
+		metab2.autoset_repl_names(inp_file2)
+
 		metab_stitched = Metabolomics(xlsx_files[0], program_log)
-		metab_stitched.stitch_with(Metabolomics(xlsx_files[1], program_log))
+		metab_stitched.stitch_with(Metabolomics(xlsx_files[2], program_log))
+		metab_stitched.autoset_repl_names(inp_file1)
 
 		create_reformatted_xlsx_file(metab1, metab2, metab_stitched, args[-1], program_log)
 	
