@@ -365,6 +365,14 @@ def get_input_file_cat_vars(input_filename):
 	return cat_var_list
 
 
+
+def format_cell_right(cell, color):
+	cell.fill = color
+	cell.border = Border(top=outline, left=outline, right=outline, bottom=outline)
+	cell.alignment = Alignment(horizontal = "right", vertical = "bottom")
+	
+	
+
 def create_xlsx_file(metab1, metab2, stitched, save_as, program_log):
 	#CREATE DATA TABLE SHEET
 		#gray
@@ -442,6 +450,13 @@ def create_xlsx_file(metab1, metab2, stitched, save_as, program_log):
 	metab2_counter = 0
 
 	metabo_color_list = []
+		
+	metab_name_col = 1
+	mode_sel_col = 2
+	is_both_col = 3
+	pos_col = 4
+	neg_col = 6
+	key_col = 9
 
 	for metabolite in stitched.get_metabolites().copy():
 		cell_color = def_cell_color
@@ -456,27 +471,27 @@ def create_xlsx_file(metab1, metab2, stitched, save_as, program_log):
 		metab1_normarea = metab1.get_metabolites()[metab1_counter].get_avg_normarea()
 		metab2_normarea = metab2.get_metabolites()[metab2_counter].get_avg_normarea()
 
-		line[1] = metabolite.get_name()
+		line[metab_name_col] = metabolite.get_name()
 		if metab1_name == metabolite.get_name():
-			line[3] = metab1_rsd
-			line[4] = metab1_normarea
+			line[pos_col - 1] = metab1_rsd
+			line[pos_col] = metab1_normarea
 			if metab1_normarea == metabolite.get_avg_normarea():
-				line[0] = 'P'
+				line[mode_sel_col] = 'P'
 				cell_color = metab1_cell_color
 			is_metab1 = True
 			metab1_counter += 1
 
 		if metab2_name == metabolite.get_name():
-			line[5] = metab2_rsd
-			line[6] = metab2_normarea
+			line[neg_col - 1] = metab2_rsd
+			line[neg_col] = metab2_normarea
 			if metab2_normarea == metabolite.get_avg_normarea() and not metab1_normarea == metabolite.get_avg_normarea():
-				line[0] = 'N'
+				line[mode_sel_col] = 'N'
 				cell_color = metab2_cell_color
 			is_metab2 = True
 			metab2_counter += 1
 
 		if is_metab1 and is_metab2:
-			line[2] = 'X'
+			line[is_both_col] = 'X'
 		data.append(line)
 		metabo_color_list.append(cell_color)
 	
@@ -500,108 +515,96 @@ def create_xlsx_file(metab1, metab2, stitched, save_as, program_log):
 			cell.border = Border(top=outline, left=outline, right=outline, bottom=outline)
 		counter += 1
 
-	for row in ws.iter_rows(min_row=1, min_col=3, max_col=7, max_row=ws.max_row):
+	for row in ws.iter_rows(min_row=1, min_col=mode_sel_col, max_col=neg_col + 1, max_row=ws.max_row):
 		for cell in row:
 			cell.alignment = Alignment(horizontal = "center", vertical = "bottom")
 
-	for row in ws.iter_rows(min_row=1, min_col=1, max_col=1, max_row=ws.max_row):
-		for cell in row:
-			cell.alignment = Alignment(horizontal = "center", vertical = "bottom")
-
-	for row in ws.iter_rows(min_row=2, min_col=4, max_col=5, max_row=ws.max_row):
+	for row in ws.iter_rows(min_row=2, min_col=pos_col, max_col=pos_col + 1, max_row=ws.max_row):
 		for cell in row:
 			cell.fill = metab1_cell_color_light
 			cell.border = Border(top=outline, left=outline, right=outline, bottom=outline)
 
-	for row in ws.iter_rows(min_row=2, min_col=6, max_col=7, max_row=ws.max_row):
+	for row in ws.iter_rows(min_row=2, min_col=neg_col, max_col=neg_col + 1, max_row=ws.max_row):
 		for cell in row:
 			cell.fill = metab2_cell_color_light
 			cell.border = Border(top=outline, left=outline, right=outline, bottom=outline)
 
 	for row in range(ws.min_row + 1, ws.max_row):
-		pos_cell_rsd = ws.cell(row=row, column=4)
-		pos_cell_norm = ws.cell(row=row, column=5)
-		neg_cell_rsd = ws.cell(row=row, column=6)
-		neg_cell_norm = ws.cell(row=row, column=7)
+		pos_cell_rsd = ws.cell(row=row, column=pos_col)
+		pos_cell_norm = ws.cell(row=row, column=pos_col + 1)
+		neg_cell_rsd = ws.cell(row=row, column=neg_col)
+		neg_cell_norm = ws.cell(row=row, column=neg_col + 1)
 		
-		if (pos_cell_rsd.value and neg_cell_rsd.value):
-			if (pos_cell_rsd.value < neg_cell_rsd.value):
-				pos_cell_rsd.font = bold_font
-			elif (pos_cell_rsd.value > neg_cell_rsd.value):
-				neg_cell_rsd.font = bold_font
-			else:
-				pos_cell_rsd.font = bold_font
-				neg_cell_rsd.font = bold_font
+		try:
+			if (pos_cell_rsd.value and neg_cell_rsd.value):
+				if (pos_cell_rsd.value < neg_cell_rsd.value):
+					pos_cell_rsd.font = bold_font
+				elif (pos_cell_rsd.value > neg_cell_rsd.value):
+					neg_cell_rsd.font = bold_font
+				else:
+					pos_cell_rsd.font = bold_font
+					neg_cell_rsd.font = bold_font
 
-			if (pos_cell_norm.value > neg_cell_norm.value):
-				pos_cell_norm.font = bold_font
-			elif (pos_cell_norm.value < neg_cell_norm.value):
-				neg_cell_norm.font = bold_font
-			else:
-				pos_cell_norm.font = bold_font
-				neg_cell_norm.font = bold_font
+				if (pos_cell_norm.value > neg_cell_norm.value):
+					pos_cell_norm.font = bold_font
+				elif (pos_cell_norm.value < neg_cell_norm.value):
+					neg_cell_norm.font = bold_font
+				else:
+					pos_cell_norm.font = bold_font
+					neg_cell_norm.font = bold_font
 
-		elif (pos_cell_rsd.value and not neg_cell_rsd.value):
-			pos_cell_rsd.font = bold_font
-			pos_cell_norm.font = bold_font
-		else:
-			neg_cell_rsd.font = bold_font
-			neg_cell_norm.font = bold_font
+			elif (pos_cell_rsd.value and not neg_cell_rsd.value):
+				pos_cell_rsd.font = bold_font
+				pos_cell_norm.font = bold_font
+			else:
+				neg_cell_rsd.font = bold_font
+				neg_cell_norm.font = bold_font
+		except Exception as e:
+			print(e)
+		
 			
 
 	dim_holder = DimensionHolder(worksheet=ws)
 	for col in range(ws.min_column, ws.max_column + 1):
 		dim_holder[get_column_letter(col)] = ColumnDimension(ws, min=col, max=col, width=8)
-	dim_holder['B'] = ColumnDimension(ws, min=2, max=2, width=40)
-	dim_holder['E'] = ColumnDimension(ws, min=5, max=5, width=15)
-	dim_holder['G'] = ColumnDimension(ws, min=7, max=7, width=15)
-	dim_holder['I'] = ColumnDimension(ws, min=9, max=9, width=25)
+	dim_holder['A'] = ColumnDimension(ws, min=metab_name_col, max=metab_name_col, width=40)
+	dim_holder['E'] = ColumnDimension(ws, min=pos_col + 1, max=pos_col + 1, width=15)
+	dim_holder['G'] = ColumnDimension(ws, min=neg_col + 1, max=neg_col + 1, width=15)
+	dim_holder['I'] = ColumnDimension(ws, min=key_col, max=key_col, width=25)
 	ws.column_dimensions = dim_holder
 
-	cell = ws["D1"]
-	cell.fill = metab1_cell_color
-	cell.border = Border(top=outline, left=outline, right=outline, bottom=outline)
-	cell.alignment = Alignment(horizontal = "right", vertical = "bottom")
-	cell = ws["E1"]
-	cell.fill = metab1_cell_color
-	cell.border = Border(top=outline, left=outline, right=outline, bottom=outline)
-	cell.alignment = Alignment(horizontal = "right", vertical = "bottom")
-
-	cell = ws["F1"]
-	cell.fill = metab2_cell_color
-	cell.border = Border(top=outline, left=outline, right=outline, bottom=outline)
-	cell.alignment = Alignment(horizontal = "right", vertical = "bottom")
-	cell = ws["G1"]
-	cell.fill = metab2_cell_color
-	cell.border = Border(top=outline, left=outline, right=outline, bottom=outline)
-	cell.alignment = Alignment(horizontal = "right", vertical = "bottom")
-
+	format_cell_right(ws["D1"], metab1_cell_color)
+	format_cell_right(ws["E1"], metab1_cell_color)
+	format_cell_right(ws["F1"], metab2_cell_color)
+	format_cell_right(ws["G1"], metab2_cell_color)
+	format_cell_right(ws["I2"], metab1_cell_color)
+	format_cell_right(ws["I3"], metab2_cell_color)
 	cell = ws["I2"]
 	cell.value = "Positive Mode"
-	cell.fill = metab1_cell_color
-	cell.border = Border(top=outline, left=outline, right=outline, bottom=outline)
-	cell.alignment = Alignment(horizontal = "center", vertical = "bottom")
 	cell = ws["I3"]
 	cell.value = "Negative Mode"
-	cell.fill = metab2_cell_color
-	cell.border = Border(top=outline, left=outline, right=outline, bottom=outline)
-	cell.alignment = Alignment(horizontal = "center", vertical = "bottom")
+	
+	tip_col_width = 4
+	tip_col = 11
+	tip_row1 = 2
+	tip_row2 = 6
+	tip_row3  = 11
 
-	cell = ws.cell(row=2, column=11)
-	for col in range(4):
-		ws.merge_cells(start_row=2, start_column=11, end_row=4, end_column=15)
+	cell = ws.cell(row=tip_row1, column=tip_col)
+	for col in range(tip_col_width):
+		ws.merge_cells(start_row=tip_row, start_column=tip_col, end_row=tip_row + 2, end_column=tip_col + 4)
 	cell.value = "Metablr selects the mode based on which mode (positive or negative respectively) has the lowest RSD QC percentage"
 	cell.alignment = Alignment(wrap_text=True)
 
-	cell = ws.cell(row=6, column=11)
-	for col in range(4):
-		ws.merge_cells(start_row=6, start_column=11, end_row=9, end_column=15)
+	cell = ws.cell(row=tip_row2, column=tip_col)
+	for col in range(tip_col_width):
+		ws.merge_cells(start_row=tip_row2, start_column=tip_col, end_row=tip_row2 + 3, end_column=tip_col + 4)
 	cell.value = "RSD QC and QC Norm Avg for both modes are availabe for comparison. If an RSD cell is bold for a positive mode RSD QC, than the positive mode has the lower RSD QC and vice versa."
 	cell.alignment = Alignment(wrap_text=True)
 
-	cell = ws.cell(row=11, column=11)
-	for col in range(4):
-		ws.merge_cells(start_row=11, start_column=11, end_row=14, end_column=15)
+	cell = ws.cell(row=tip_row3, column=tip_col)
+	for col in range(tip_col_width):
+		ws.merge_cells(start_row=tip_row3, start_column=tip_col, end_row=tip_row3 + 3, end_column=tip_col + 4)
 	cell.value = "Likewise, if a Norm Avg. cell is bold for a positive mode Norm Avg. - the positive mode has a higher Norm Avg. than the negative mode and vice versa."
 	cell.alignment = Alignment(wrap_text=True)
 
