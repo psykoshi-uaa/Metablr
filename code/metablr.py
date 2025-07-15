@@ -367,6 +367,7 @@ def get_input_file_cat_vars(input_filename):
 
 
 def format_cell_right(cell, color):
+	outline = Side(style = "thin", color = "000000")
 	cell.fill = color
 	cell.border = Border(top=outline, left=outline, right=outline, bottom=outline)
 	cell.alignment = Alignment(horizontal = "right", vertical = "bottom")
@@ -458,11 +459,12 @@ def create_xlsx_file(metab1, metab2, stitched, save_as, program_log):
 	neg_col = 6
 	key_col = 9
 
+	counter = 0
 	for metabolite in stitched.get_metabolites().copy():
 		cell_color = def_cell_color
 		is_metab1 = False
 		is_metab2 = False
-		line = ['', '','','','','','']
+		line = ['','','','','','','']
 
 		metab1_name = metab1.get_metabolites()[metab1_counter].get_name()
 		metab2_name = metab2.get_metabolites()[metab2_counter].get_name()
@@ -471,12 +473,12 @@ def create_xlsx_file(metab1, metab2, stitched, save_as, program_log):
 		metab1_normarea = metab1.get_metabolites()[metab1_counter].get_avg_normarea()
 		metab2_normarea = metab2.get_metabolites()[metab2_counter].get_avg_normarea()
 
-		line[metab_name_col] = metabolite.get_name()
+		line[metab_name_col - 1] = metabolite.get_name()
 		if metab1_name == metabolite.get_name():
 			line[pos_col - 1] = metab1_rsd
 			line[pos_col] = metab1_normarea
 			if metab1_normarea == metabolite.get_avg_normarea():
-				line[mode_sel_col] = 'P'
+				line[mode_sel_col - 1] = 'P'
 				cell_color = metab1_cell_color
 			is_metab1 = True
 			metab1_counter += 1
@@ -485,19 +487,22 @@ def create_xlsx_file(metab1, metab2, stitched, save_as, program_log):
 			line[neg_col - 1] = metab2_rsd
 			line[neg_col] = metab2_normarea
 			if metab2_normarea == metabolite.get_avg_normarea() and not metab1_normarea == metabolite.get_avg_normarea():
-				line[mode_sel_col] = 'N'
+				line[mode_sel_col - 1] = 'N'
 				cell_color = metab2_cell_color
 			is_metab2 = True
 			metab2_counter += 1
 
 		if is_metab1 and is_metab2:
-			line[is_both_col] = 'X'
+			line[is_both_col - 1] = 'X'
 		data.append(line)
 		metabo_color_list.append(cell_color)
+		
+		#counter += 1
+		#print(counter)
 	
 	ws = wb.create_sheet("Summary")
 	ws.append(header)
-
+	
 	for col in ws["A:G"]:
 		for cell in col:
 			cell.font = bold_font
@@ -509,7 +514,7 @@ def create_xlsx_file(metab1, metab2, stitched, save_as, program_log):
 
 	counter = 0
 	outline = Side(style = "thin", color = "000000")
-	for row in ws.iter_rows(min_row=2, min_col = 2, max_col=2, max_row=ws.max_row):
+	for row in ws.iter_rows(min_row=2, min_col = metab_name_col, max_col=metab_name_col, max_row=ws.max_row):
 		for cell in row:
 			cell.fill = metabo_color_list[counter]
 			cell.border = Border(top=outline, left=outline, right=outline, bottom=outline)
@@ -535,33 +540,29 @@ def create_xlsx_file(metab1, metab2, stitched, save_as, program_log):
 		neg_cell_rsd = ws.cell(row=row, column=neg_col)
 		neg_cell_norm = ws.cell(row=row, column=neg_col + 1)
 		
-		try:
-			if (pos_cell_rsd.value and neg_cell_rsd.value):
-				if (pos_cell_rsd.value < neg_cell_rsd.value):
-					pos_cell_rsd.font = bold_font
-				elif (pos_cell_rsd.value > neg_cell_rsd.value):
-					neg_cell_rsd.font = bold_font
-				else:
-					pos_cell_rsd.font = bold_font
-					neg_cell_rsd.font = bold_font
-
-				if (pos_cell_norm.value > neg_cell_norm.value):
-					pos_cell_norm.font = bold_font
-				elif (pos_cell_norm.value < neg_cell_norm.value):
-					neg_cell_norm.font = bold_font
-				else:
-					pos_cell_norm.font = bold_font
-					neg_cell_norm.font = bold_font
-
-			elif (pos_cell_rsd.value and not neg_cell_rsd.value):
+		if (pos_cell_rsd.value and neg_cell_rsd.value):
+			if (pos_cell_rsd.value < neg_cell_rsd.value):
 				pos_cell_rsd.font = bold_font
-				pos_cell_norm.font = bold_font
-			else:
+			elif (pos_cell_rsd.value > neg_cell_rsd.value):
 				neg_cell_rsd.font = bold_font
+			else:
+				pos_cell_rsd.font = bold_font
+				neg_cell_rsd.font = bold_font
+
+			if (pos_cell_norm.value > neg_cell_norm.value):
+				pos_cell_norm.font = bold_font
+			elif (pos_cell_norm.value < neg_cell_norm.value):
 				neg_cell_norm.font = bold_font
-		except Exception as e:
-			print(e)
-		
+			else:
+				pos_cell_norm.font = bold_font
+				neg_cell_norm.font = bold_font
+
+		elif (pos_cell_rsd.value and not neg_cell_rsd.value):
+			pos_cell_rsd.font = bold_font
+			pos_cell_norm.font = bold_font
+		else:
+			neg_cell_rsd.font = bold_font
+			neg_cell_norm.font = bold_font
 			
 
 	dim_holder = DimensionHolder(worksheet=ws)
@@ -588,24 +589,18 @@ def create_xlsx_file(metab1, metab2, stitched, save_as, program_log):
 	tip_col = 11
 	tip_row1 = 2
 	tip_row2 = 6
-	tip_row3  = 11
+
 
 	cell = ws.cell(row=tip_row1, column=tip_col)
 	for col in range(tip_col_width):
-		ws.merge_cells(start_row=tip_row, start_column=tip_col, end_row=tip_row + 2, end_column=tip_col + 4)
-	cell.value = "Metablr selects the mode based on which mode (positive or negative respectively) has the lowest RSD QC percentage"
+		ws.merge_cells(start_row=tip_row1, start_column=tip_col, end_row=tip_row1 + 3, end_column=tip_col + 4)
+	cell.value = "Mode selection prioritizes the mode with the lowest RSD QC percentage. If both modes share an equivalent RSD QC percentage than the mode with the highest Norm Avg becomes the priority."
 	cell.alignment = Alignment(wrap_text=True)
 
 	cell = ws.cell(row=tip_row2, column=tip_col)
 	for col in range(tip_col_width):
 		ws.merge_cells(start_row=tip_row2, start_column=tip_col, end_row=tip_row2 + 3, end_column=tip_col + 4)
-	cell.value = "RSD QC and QC Norm Avg for both modes are availabe for comparison. If an RSD cell is bold for a positive mode RSD QC, than the positive mode has the lower RSD QC and vice versa."
-	cell.alignment = Alignment(wrap_text=True)
-
-	cell = ws.cell(row=tip_row3, column=tip_col)
-	for col in range(tip_col_width):
-		ws.merge_cells(start_row=tip_row3, start_column=tip_col, end_row=tip_row3 + 3, end_column=tip_col + 4)
-	cell.value = "Likewise, if a Norm Avg. cell is bold for a positive mode Norm Avg. - the positive mode has a higher Norm Avg. than the negative mode and vice versa."
+	cell.value = "Each Metabolite has its favorable RSD QC and favorable Norm Avg in bold font as compared between its two modes."
 	cell.alignment = Alignment(wrap_text=True)
 
 	wb.save(save_as)
