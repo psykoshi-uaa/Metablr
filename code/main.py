@@ -160,20 +160,18 @@ class App(tk.Tk):
 	def export_button_pressed(self):
 		export_args = ["-E", self.file_inp_entry.get(), self.file1_CD_entry.get(), self.file2_CD_entry.get(), self.save_as()]
 		program_log = metablr.Program_Log()
-		metablr.program_state((export_args), program_log)
-		program_log.print_log()
-
-		self.event_window(program_log, "Success", "OK", "Error: files incompatible", "OK")
+		try:
+			metablr.program_state((export_args), program_log)
+			event_text = "Success"
+		except:
+			event_text = program_log.get_error_log()
+			
+		self.event_window(program_log, event_text, "OK")
 			
 		return
 
 
-	def event_window(self, program_log, event_text_success, event_button_success, event_text_error, event_button_error):
-		event_text = event_text_success
-		event_button = event_button_success
-		if (program_log.get_error_count() > 0):
-			event_text =  event_text_error
-			event_button = event_button_error
+	def event_window(self, program_log, event_text, event_button):
 		event = EventWindow(event_text, event_button)	
 		event.mainloop()
 

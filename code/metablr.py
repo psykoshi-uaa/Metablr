@@ -8,9 +8,10 @@ from openpyxl.styles import colors, Font, Color, PatternFill, Border, Side, Alig
 
 
 HELP_SEG = "\nAppend a positive and then a negative xlsx file respectively followed by the name of the file you are creating\nlist of Metablr commands:\n\t-S | --summary\tsummarized two appended metabolomics files into a combined summary table\n\t-R | --reformat\treformats the appended files into a combined data table\n\t-h | --help\thi\n"
-ERROR_0 = "Too few xlsx files"
-ERROR_1 = "Too many flags"
-ERROR_2 = "Too many arguments"
+ERROR_0 = "\nERROR 1:\n\nToo few xlsx files"
+ERROR_1 = "\nERROR 2:\n\nToo many flags"
+ERROR_2 = "\nERROR 3:\n\nToo many arguments"
+ERROR_3 = "\nERROR 4:\n\nNo Norm Data found in one of the\nfiles provided"
 CLI_SAVE_AS = "PL4C3h0Ld3r51l3n4mE"
 
 
@@ -18,25 +19,33 @@ class Program_Log():
 	def __init__(self):
 		self.reg_log = []
 		self.error_log = []
-		self.error_log.append("\n\033[31;1m\t----ERROR----\033[0m\n")
-	
+		
 	
 	def get_error_count(self):
-		return len(self.error_log) - 1
+		return len(self.error_log)
+
 
 	def append_reg(self, reg):
 		self.reg_log.append(reg)
 
+
 	def append_error(self, error):
 		self.error_log.append(error)
+
 
 	def print_log(self):
 		for line in self.reg_log:
 			print(line)
-		if (len(self.error_log) > 1):
-			self.error_log.append("\n\033[31;1m\t--END ERROR--\033[0m\n")
+		if (len(self.error_log) > 0):
 			for line in self.error_log:
 				print(line)
+			
+	
+	def get_error_log(self):
+		log = ""
+		for i in range(len(self.error_log)):
+			log += self.error_log[i] + "\n"
+		return log
 
 
 
@@ -57,26 +66,32 @@ class Headers():
 		repl_ind_counter = 0
 		wb = openpyxl.load_workbook(xlsx_filename)
 		ws = wb.worksheets[0]
+			
 		for col in range(1, ws.max_column + 1):
 			cell = ws.cell(row = 1, column = col)
-			if (self.get_header_title("name", program_log) in cell.value.lower()):
+			if (self.get_header_title("name") in cell.value.lower()):
 				self.set_ind_name(col - 1)
-			if (self.get_header_title("rsd", program_log) in cell.value.lower()):
+			if (self.get_header_title("rsd") in cell.value.lower()):
 				self.set_ind_rsd(col - 1)
-			if (self.get_header_title("norm", program_log) in cell.value.lower()):
+			if (self.get_header_title("norm") in cell.value.lower()):
 				if (norm_ind_counter == 0):
 					self.set_ind_normarea_start(col - 1)
-				if ("qc" in cell.value.lower()):				#FIX MAGIC STRING
+				if ("qc" in cell.value.lower()):
 					norm_ind_counter += 1
-			if (self.get_header_title("repl", program_log) in cell.value.lower()):
+			if (self.get_header_title("repl") in cell.value.lower()):
 				if (repl_ind_counter == 0):
 					self.set_ind_repl_start(col)
 				repl_ind_counter += 1
+			
+		if (norm_ind_counter == 0):
+			program_log.append_error(ERROR_3)
+			return
 
 		if (norm_ind_counter > 0):
 			self.set_ind_normarea_end(self.get_ind_normarea_start() + norm_ind_counter - 1)
 		if (repl_ind_counter > 0):
 			self.set_ind_repl_end(self.get_ind_repl_start() + repl_ind_counter - 1)
+
 
 
 	def get_ind_name(self):
@@ -103,12 +118,9 @@ class Headers():
 		return self.ind_rsd
 
 
-	def get_header_title(self, title, program_log):
-		try:
-			return self.headers[title]
-		except Exception as e:
-			program_log.append_error(e)
-			return ""
+	def get_header_title(self, title):
+		return self.headers[title]
+
 
 
 	def set_ind_name(self, ind):
@@ -349,7 +361,7 @@ def get_input_file_cat_vars(input_filename):
 		cell = ws.cell(row=1, column=col)
 		if ("sample type" in cell.value.lower()):
 			samp_ind = col
-		elif ("categorical" in cell.value.lower() and "variable" in cell.value.lower()):
+		elif ("categorical" in cell.value.lower() and col > samp_ind):
 			cat_var_ind = col
 
 	for row in range(ws.min_row + 1, ws.max_row + 1):
